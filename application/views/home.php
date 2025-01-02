@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($pageTitle) ? $pageTitle : 'Zerocoin Faucet Login' ?></title>
-<!-- Favicon -->
+    <!-- Favicon -->
     <link rel="icon" href="<?= site_url('assets/favicon.png') ?>" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -26,6 +26,15 @@
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
+        .navbar {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+        .navbar-brand, .nav-link {
+            color: #fff !important;
+        }
+        .navbar-brand:hover, .nav-link:hover {
+            color: #ff7b00 !important;
+        }
         h1, h3 {
             color: #f8f9fa;
         }
@@ -42,24 +51,46 @@
             font-size: 0.9rem;
             color: #ddd;
         }
-        
-        /* Táblázat stílus */
         table td {
             color: #fff !important;
-            background: #1e3c72 !important; /* Sötétebb kék háttérszín, erősített */
+            background: #1e3c72 !important;
             border-radius: 10px;
             margin-top: 1rem;
         }
         table th {
-            background-color: #2a5298 !important; /* Kékes árnyalat a fejlécnek */
+            background-color: #2a5298 !important;
             color: #fff !important;
         }
         .footer a {
             color: white;
         }
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="<?= site_url('') ?>"><?= $faucetName ?></a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('home') ?>">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= site_url('home/faq') ?>">FAQ</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
     <div class="container text-center">
         <!-- Header -->
         <div class="section mb-4">
@@ -67,8 +98,9 @@
             <p class="lead">Start collecting Zerocoins today!</p>
         </div>
         <div class="text-center">
-      <?= $bannerHeaderHome; ?>
-    </div>
+            <?= $bannerHeaderHome; ?>
+        </div>
+        
         <!-- Login Section -->
         <div class="section mb-4" style="max-width: 600px; margin: 0 auto;">
             <?php if (isset($error)): ?>
@@ -110,8 +142,9 @@
         </div>
         <br>
         <div class="text-center">
-      <?= $bannerFooterHome; ?>
-    </div>
+            <?= $bannerFooterHome; ?>
+        </div>
+
         <!-- Last 10 Withdrawals -->
         <div class="section" style="max-width: 800px; margin: 0 auto;">
             <h4 class="mb-3">Last 10 Withdrawals</h4>
@@ -132,15 +165,15 @@
                             <td><?= $row->amount ?> ZER</td>
                             <td><?= timeElapsedString($row->requested_at) ?></td>
                             <td class="<?php 
-                switch ($row->status) {
-                    case 'Paid': echo 'text-success'; break; // Zöld
-                    case 'Pending': echo 'text-warning'; break; // Narancs
-                    case 'Rejected': echo 'text-danger'; break; // Piros
-                    default: echo 'text-muted'; break; // Alapértelmezett
-                }
-            ?>">
-                <?= htmlspecialchars($row->status) ?>
-            </td>
+                                switch ($row->status) {
+                                    case 'Paid': echo 'text-success'; break;
+                                    case 'Pending': echo 'text-warning'; break;
+                                    case 'Rejected': echo 'text-danger'; break;
+                                    default: echo 'text-muted'; break;
+                                }
+                            ?>">
+                                <?= htmlspecialchars($row->status) ?>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

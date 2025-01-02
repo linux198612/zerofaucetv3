@@ -61,5 +61,13 @@ class Home extends CI_Controller {
         
         $this->load->view('home', $data);
     }
+
+    public function faq() {
+        $faucetName = $this->db->get_where('settings', ['name' => 'faucet_name'])->row_array();
+        $data['faucetName'] = isset($faucetName['value']) ? $faucetName['value'] : ''; 
+        $data['pageTitle'] = 'FAQ';
+        
+        $this->load->view('faq', $data);
+    }
 }
 
