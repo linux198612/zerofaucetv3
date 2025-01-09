@@ -7,6 +7,7 @@
 <!-- Favicon -->
     <link rel="icon" href="<?= site_url('assets/favicon.png') ?>" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	 <script src="<?= site_url('assets/js/main.js') ?>"></script>
      <style>
         body {
             display: flex;

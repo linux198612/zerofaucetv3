@@ -7,10 +7,6 @@
 
     <form method="post" action="<?= base_url('admin/settings_save') ?>">
 
-    <div class="mb-3">
-            <label for="license_key" class="form-label">License Key:</label>
-            <input type="text" name="license_key" id="license_key" value="<?= isset($settings['license_key']) ? $settings['license_key'] : '' ?>" class="form-control" required>
-        </div>
         <div class="mb-3">
             <label for="faucet_name" class="form-label">Faucet Name</label>
             <input type="text" name="faucet_name" id="faucet_name" value="<?= isset($settings['faucet_name']) ? $settings['faucet_name'] : '' ?>" class="form-control" required>

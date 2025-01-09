@@ -6,7 +6,7 @@ CREATE TABLE users (
     balance decimal(20,8) NOT NULL,
     total_withdrawals decimal(20,8) DEFAULT 0,
     last_activity int(32) NOT NULL,
-    auto_token VARCHAR(64) DEFAULT NULL;
+	auto_token VARCHAR(64) DEFAULT NULL;
     joined int(32) NOT NULL,
     referred_by INT NOT NULL DEFAULT 0;
     referral_earnings DECIMAL(15,8) NOT NULL DEFAULT 0.00000000,
@@ -72,6 +72,7 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 ('35', 'banner_footer_dashboard', ''),
 ('36', 'autofaucet_status', 'on'),
 ('37', 'banner_header_withdraw', '');
+-- eddig kész a sql a settingsből
 
 CREATE TABLE `energyshop_packages` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
@@ -89,3 +90,12 @@ CREATE TABLE IF NOT EXISTS `transactions` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
+CREATE TABLE IF NOT EXISTS `withdraw_log` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `amount` decimal(18,8) NOT NULL,
+    `address` varchar(255) NOT NULL,
+    `error_message` text NOT NULL,
+    `logged_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -38,6 +38,8 @@
                     <a href="<?= site_url('admin/energy_shop') ?>">Energy Shop manager</a>
                     <a href="<?= site_url('admin/withdraw_settings') ?>">Withdraw settings</a>
                     <a href="<?= base_url('admin/change-password') ?>">Change Password</a>
+                    <a href="<?= base_url('admin/users') ?>">Users</a>
+                    <a href="<?= base_url('admin/withdraw_logs') ?>">Withdraw Error log</a>
                     <a href="<?= base_url('admin/logout') ?>">Logout</a>
                 </div>
             </nav>

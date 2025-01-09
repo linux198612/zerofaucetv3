@@ -330,5 +330,152 @@ class Admin extends CI_Controller {
         redirect('admin/energy_shop');
     }
 
+    public function users() {
+        $this->_check_admin(); // Ellenőrizzük az admin bejelentkezést
+    
+        // Felhasználók lekérése az adatbázisból
+        $data['users'] = $this->db->get('users')->result_array();
+    
+        // Nézet betöltése
+        $this->_load_view('users', [
+            'title' => 'User Management',
+            'users' => $data['users']
+        ]);
+    }
+    
+    public function user_details($user_id)
+    {
+        $this->_check_admin();
+    
+        // Felhasználó adatainak lekérése
+        $user = $this->db->where('id', $user_id)->get('users')->row_array();
+    
+        if (!$user) {
+            show_404(); // Ha nincs ilyen felhasználó, 404-es hiba
+        }
+    
+        if ($this->input->method() === 'post') {
+            // POST kérelem - adatok frissítése
+            $balance = $this->input->post('balance');
+            $energy = $this->input->post('energy');
+    
+            // Kézi validáció
+            $errors = [];
+            if (!is_numeric($balance)) {
+                $errors[] = 'Balance must be a valid number.';
+            }
+            if (!ctype_digit($energy)) {
+                $errors[] = 'Energy must be a valid integer.';
+            }
+    
+            if (empty($errors)) {
+                // Ha nincs hiba, frissítjük az adatokat
+                $data = [
+                    'balance' => $balance,
+                    'energy' => $energy
+                ];
+    
+                $this->db->where('id', $user_id)->update('users', $data);
+    
+                $this->session->set_flashdata('success', 'User data successfully updated.');
+                redirect('admin/user_details/' . $user_id);
+            } else {
+                // Hibák tárolása
+                $this->session->set_flashdata('error', implode('<br>', $errors));
+            }
+        }
+    
+        // Nézet betöltése
+        $this->_load_view('user_details', [
+            'title' => 'User Details',
+            'user' => $user
+        ]);
+    }
+    
+    
+    public function withdraw_logs()
+{
+    $this->_check_admin();
 
+    // Logok lekérdezése
+    $logs = $this->db->order_by('logged_at', 'DESC')->get('withdraw_log')->result_array();
+
+    $this->_load_view('withdraw_logs', [
+        'title' => 'Withdraw Logs',
+        'logs' => $logs
+    ]);
+}
+
+public function delete_withdraw_log($id)
+{
+    $this->_check_admin();
+
+    // Log törlése az ID alapján
+    $this->db->where('id', $id)->delete('withdraw_log');
+    $this->session->set_flashdata('success', 'The log entry has been successfully deleted.');
+    redirect('admin/withdraw_logs');
+}
+
+    
+public function process_withdrawal($user_id) {
+    $this->_check_admin();
+
+    $amount = $this->input->post('amount');
+    $user = $this->db->where('id', $user_id)->get('users')->row_array();
+
+    if ($user && is_numeric($amount) && $amount > 0) {
+        // Felhasználó ZeroCoin címe
+        $address = $user['address'];
+        
+        // ZeroChain API kulcsok lekérése
+        $zcApi = $this->db->get_where('settings', ['name' => 'zerochain_api'])->row_array();
+        $zcPrivateKey = $this->db->get_where('settings', ['name' => 'zerochain_privatekey'])->row_array();
+
+        // API hívás a kifizetéshez
+        $api_url = "https://zerochain.info/api/rawtxbuild/{$zcPrivateKey['value']}/{$address}/{$amount}/0/1/{$zcApi['value']}";
+        $result = file_get_contents($api_url);
+
+        if ($result === false) {
+            log_message('error', 'Error in file_get_contents');
+            $this->session->set_flashdata('error', 'Error with external API request.');
+            redirect('admin/user_details/' . $user_id);
+        }
+
+        // JSON válasz feldolgozása
+        $data = json_decode($result, true);
+        if (isset($data['txid']) && !empty($data['txid'])) {
+            $TxID = $data['txid'];
+
+            // Kifizetés sikeres, beszúrjuk a withdrawals táblába
+            $this->db->insert('withdrawals', [
+                'user_id' => $user_id,
+                'amount' => $amount,
+                'status' => 'Paid',
+                'txid' => $TxID,
+                'requested_at' => date('Y-m-d H:i:s')
+            ]);
+
+            // Levonjuk az összeget a felhasználó egyenlegéből
+            $this->db->set('balance', 'balance - ' . $amount, FALSE);
+            $this->db->where('id', $user_id);
+            $this->db->update('users');
+
+            // Frissítjük a kifizetett összeg statisztikáját
+            $this->db->set('total_withdrawals', 'total_withdrawals + ' . $amount, FALSE);
+            $this->db->where('id', $user_id);
+            $this->db->update('users');
+
+            $this->session->set_flashdata('success', 'Withdrawal processed successfully.');
+        } else {
+            log_message('error', 'API Error: Failed to generate TxID for user ID ' . $user_id);
+            $this->session->set_flashdata('error', 'API error: Failed to generate TxID. Please check the address or try again later.');
+        }
+    } else {
+        $this->session->set_flashdata('error', 'Invalid amount or user.');
+    }
+
+    redirect('admin/user_details/' . $user_id);
+}
+
+       
 }
