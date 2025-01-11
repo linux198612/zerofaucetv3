@@ -85,7 +85,6 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 ('47', 'zerads_exchange_value', ''),
 ('48', 'zerads_password', ''),
 ('49', 'cmc_api', '');
--- eddig kész a sql a settingsből
 
 CREATE TABLE `energyshop_packages` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
