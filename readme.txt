@@ -24,3 +24,4 @@ news (0.95->0.96):
 - offerwalls added bitcotasks
 - add bitcotasks ptc and shortlinks menu (bearer token)
 - add zerads ptc
+- bugfix
