@@ -4,7 +4,6 @@
     </div>
 <?php endif; ?>
 
-<h1>Withdraw Logs</h1>
 <table class="table table-bordered">
     <thead>
         <tr>

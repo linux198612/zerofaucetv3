@@ -16,7 +16,6 @@
             <label for="referral_percent" class="form-label">Referral Reward (%)</label>
             <input type="text" name="referral_percent" id="referral_percent" value="<?= isset($settings['referral_percent']) ? $settings['referral_percent'] : '' ?>" class="form-control" required>
         </div>
-
         <div class="mb-3">
             <label for="maintenance" class="form-label">Maintenance Mode</label>
             <select name="maintenance" id="maintenance" class="form-select">

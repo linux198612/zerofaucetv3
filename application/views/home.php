@@ -7,6 +7,7 @@
     <!-- Favicon -->
     <link rel="icon" href="<?= site_url('assets/favicon.png') ?>" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="<?= site_url('assets/js/main.js') ?>"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3c72, #2a5298);
@@ -112,7 +113,6 @@
             <form method="POST" action="">
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>" />
                 <div class="mb-3">
-                    <label for="zerocoin_address" class="form-label">Zerocoin Address</label>
                     <input type="text" class="form-control" id="zerocoin_address" name="zerocoin_address" placeholder="Enter your Zerocoin address" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Login</button>

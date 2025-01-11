@@ -1,4 +1,4 @@
-<h2>User Management</h2>
+
 <table class="table table-striped">
     <thead>
         <tr>

@@ -6,13 +6,14 @@ CREATE TABLE users (
     balance decimal(20,8) NOT NULL,
     total_withdrawals decimal(20,8) DEFAULT 0,
     last_activity int(32) NOT NULL,
-	auto_token VARCHAR(64) DEFAULT NULL;
+	 auto_token VARCHAR(64) DEFAULT NULL;
     joined int(32) NOT NULL,
     referred_by INT NOT NULL DEFAULT 0;
     referral_earnings DECIMAL(15,8) NOT NULL DEFAULT 0.00000000,
     energy int(32) DEFAULT 0,
     last_autofaucet DATETIME DEFAULT NULL,
-    last_claim int(32) NOT NULL
+    last_claim int(32) NOT NULL,
+    credits deciam(10,2) NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 -- Kifizetések tábla
@@ -29,13 +30,13 @@ CREATE TABLE withdrawals (
 CREATE TABLE IF NOT EXISTS `settings` (
     `id` int(32) UNSIGNED NOT NULL AUTO_INCREMENT,
     `name` varchar(50) NOT NULL,
-    `value` text NOT NULL,
+    `value` varchar(400) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1;
 
 -- Add default settings
 INSERT INTO `settings` (`id`, `name`, `value`) VALUES 
-('1', 'faucet_name', 'Zero Faucet'),
+('1', 'faucet_name', 'CoolFaucet'),
 ('2', 'autofaucet_reward', '0.00001'), 
 ('3', 'autofaucet_interval', '30'),
 ('4', 'referral_percent', '10'),
@@ -71,7 +72,19 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 ('34', 'banner_header_dashboard', ''),
 ('35', 'banner_footer_dashboard', ''),
 ('36', 'autofaucet_status', 'on'),
-('37', 'banner_header_withdraw', '');
+('37', 'banner_header_withdraw', ''),
+('38', 'offerwalls_status', ''),
+('39', 'bitcotasks_status', ''),
+('40', 'bitcotasks_api', ''),
+('41', 'bitcotasks_secret', ''),
+('42', 'bitcotasks_bearer_token', ''),
+('43', 'bitcotasks_ptc_status', 'on'),
+('44', 'bitcotasks_shortlinks_status', 'on'),
+('45', 'zerads_ptc_status', 'off'),
+('46', 'zerads_id', ''),
+('47', 'zerads_exchange_value', ''),
+('48', 'zerads_password', ''),
+('49', 'cmc_api', '');
 -- eddig kész a sql a settingsből
 
 CREATE TABLE `energyshop_packages` (
@@ -99,3 +112,16 @@ CREATE TABLE IF NOT EXISTS `withdraw_log` (
     `logged_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `offerwall_history` (
+  `id` int(32) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(32) unsigned NOT NULL,
+  `offerwall` varchar(50) NOT NULL,
+  `ip_address` varchar(75) NOT NULL,
+  `amount` decimal(10,2) DEFAULT '0.00',
+  `trans_id` varchar(40) NOT NULL,
+  `status` ENUM('Pending', 'Paid', 'Rejected') NOT NULL DEFAULT 'Pending', 
+  `available_at` int(32) NOT NULL,
+  `claim_time` int(32) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;

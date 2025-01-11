@@ -31,7 +31,11 @@
                     <a href="<?= base_url('admin/dashboard') ?>">Dashboard</a>
                     <a href="<?= base_url('admin/home_settings') ?>">Home</a>
                     <a href="<?= base_url('admin/autofaucet') ?>">Autofaucet</a>
+                    <a href="<?= base_url('admin/offerwalls') ?>">Offerwalls</a>
+						  <a href="<?= base_url('admin/offerwalls_pending') ?>">Offerwalls Pending</a>
+                    <a href="<?= base_url('admin/zerads') ?>">PTC (zerads)</a>
                     <a href="<?= base_url('admin/faucet') ?>">Faucet</a>
+                    <a href="<?= base_url('admin/cronjob') ?>">Cronjob</a>
                     <?php if (isset($settings['manual_withdraw']) && $settings['manual_withdraw'] == 'on'): ?>
                     <a href="<?= base_url('admin/pending_withdraw') ?>">Pending Withdraw</a>
                     <?php endif; ?>
@@ -39,7 +43,7 @@
                     <a href="<?= site_url('admin/withdraw_settings') ?>">Withdraw settings</a>
                     <a href="<?= base_url('admin/change-password') ?>">Change Password</a>
                     <a href="<?= base_url('admin/users') ?>">Users</a>
-                    <a href="<?= base_url('admin/withdraw_logs') ?>">Withdraw Error log</a>
+                    <a href="<?= base_url('admin/withdraw_logs') ?>">Withdraw error log</a>
                     <a href="<?= base_url('admin/logout') ?>">Logout</a>
                 </div>
             </nav>

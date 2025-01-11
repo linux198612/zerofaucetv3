@@ -103,6 +103,30 @@ class Admin extends CI_Controller {
             'settings' => $settings // Beállítások átadása a nézetnek
         ]);
     }
+    
+        // Offerwalls
+    public function offerwalls() {
+
+        $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
+
+        // Nézet betöltése a beállításokkal
+        $this->_load_view('offerwalls', [
+            'title' => 'Offerwalls',
+            'settings' => $settings // Beállítások átadása a nézetnek
+        ]);
+    }
+    
+            // Offerwalls
+    public function zerads() {
+
+        $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
+
+        // Nézet betöltése a beállításokkal
+        $this->_load_view('zerads', [
+            'title' => 'Zerads Settings',
+            'settings' => $settings // Beállítások átadása a nézetnek
+        ]);
+    }
 
     public function withdraw_settings() {
 
@@ -176,13 +200,9 @@ class Admin extends CI_Controller {
             $id = $this->input->post('id');
             $action = $this->input->post('action'); // 'approve' vagy 'reject'
 
-            log_message('debug', "Action: {$action}, Withdrawal ID: {$id}");
-
             if ($action === 'approve') {
                 $withdrawal = $this->db->where('id', $id)->get('withdrawals')->row_array();
                 if ($withdrawal) {
-                    // API paraméterek ellenőrzése
-                    log_message('debug', "Withdrawal Data: " . json_encode($withdrawal));
 
                     // Felhasználói adatok lekérése
                     $user = $this->db->where('id', $withdrawal['user_id'])->get('users')->row_array();
@@ -206,7 +226,6 @@ class Admin extends CI_Controller {
                     $result = file_get_contents("https://zerochain.info/api/rawtxbuild/{$zcPrivateKey['value']}/{$address}/{$amount}/0/1/{$zcApi['value']}");
 
                     if ($result === false) {
-                        log_message('error', 'Error in file_get_contents');
                         $this->session->set_flashdata('error', 'Error with external API request.');
                         unset($_SESSION['withdraw_lock']);
                         redirect('admin/pending_withdraw');
@@ -233,38 +252,48 @@ class Admin extends CI_Controller {
                         $this->db->where('id', $withdrawal['user_id']);
                         $this->db->update('users');
 
-                        log_message('debug', "Withdrawal ID {$id} approved and processed.");
                         $this->session->set_flashdata('message', "Withdrawal ID {$id} approved and processed.");
                     } else {
-                        log_message('error', "API Error: Could not process withdrawal ID {$id}.");
                         $this->session->set_flashdata('error', "API error. Could not process withdrawal ID {$id}.");
                     }
 
                     // Lock eltávolítása
                     unset($_SESSION['withdraw_lock']);
                 } else {
-                    log_message('error', "Withdrawal ID {$id} not found.");
                     $this->session->set_flashdata('error', "Withdrawal ID {$id} not found.");
                 }
-            } elseif ($action === 'reject') {
-                // Elutasított tétel frissítése
-                $this->db->set('status', 'Rejected')->where('id', $id)->update('withdrawals');
-                log_message('debug', "Withdrawal ID {$id} rejected.");
-                $this->session->set_flashdata('message', "Withdrawal ID {$id} rejected.");
-            }
+        } elseif ($action === 'reject') {
+            // Elutasított tétel frissítése
+            $withdrawal = $this->db->where('id', $id)->get('withdrawals')->row_array();
+            if ($withdrawal) {
+                $amount = $withdrawal['amount'];
 
-            redirect('admin/pending_withdraw');
+                // Frissítjük a kifizetés státuszát 'Rejected'-re
+                $this->db->set('status', 'Rejected')->where('id', $id)->update('withdrawals');
+
+                // Visszarakjuk a visszautasított összeget a felhasználó egyenlegébe
+                $this->db->set('balance', 'balance + ' . $amount, FALSE);
+                $this->db->where('id', $withdrawal['user_id']);
+                $this->db->update('users');
+
+                $this->session->set_flashdata('message', "Withdrawal ID {$id} rejected and balance refunded.");
+            } else {
+                $this->session->set_flashdata('error', "Withdrawal ID {$id} not found.");
+            }
         }
 
-        $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
-
-        // Nézet betöltése
-        $this->_load_view('pending_withdraw', [
-            'title' => 'Pending Withdrawals',
-            'withdrawals' => $data['withdrawals'],
-            'settings' => $settings
-        ]);
+        redirect('admin/pending_withdraw');
     }
+
+    $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
+
+    // Nézet betöltése
+    $this->_load_view('pending_withdraw', [
+        'title' => 'Pending Withdrawals',
+        'withdrawals' => $data['withdrawals'],
+        'settings' => $settings
+    ]);
+}
 
 	public function autofaucet() {
 	    $this->_check_admin();  // Admin jogosultság ellenőrzése
@@ -273,6 +302,15 @@ class Admin extends CI_Controller {
 	
 	    // A nézet betöltése a beállításokkal
 	    $this->_load_view('autofaucet', ['title' => 'Autofaucet Settings', 'settings' => $settings]);
+	}
+	
+		public function cronjob() {
+	    $this->_check_admin();  // Admin jogosultság ellenőrzése
+	
+        $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
+	
+	    // A nézet betöltése a beállításokkal
+	    $this->_load_view('cronjob', ['title' => 'Cronjob Settings', 'settings' => $settings]);
 	}
 
     public function energy_shop()
@@ -335,11 +373,12 @@ class Admin extends CI_Controller {
     
         // Felhasználók lekérése az adatbázisból
         $data['users'] = $this->db->get('users')->result_array();
-    
+ 		   $settings = $this->Settings_model->get_settings();
         // Nézet betöltése
         $this->_load_view('users', [
             'title' => 'User Management',
-            'users' => $data['users']
+            'users' => $data['users'],
+            'settings' => $settings
         ]);
     }
     
@@ -399,10 +438,13 @@ class Admin extends CI_Controller {
 
     // Logok lekérdezése
     $logs = $this->db->order_by('logged_at', 'DESC')->get('withdraw_log')->result_array();
+        // Beállítások lekérdezése
+        $settings = $this->Settings_model->get_settings();
 
     $this->_load_view('withdraw_logs', [
         'title' => 'Withdraw Logs',
-        'logs' => $logs
+        'logs' => $logs,
+        'settings' => $settings
     ]);
 }
 
@@ -417,46 +459,56 @@ public function delete_withdraw_log($id)
 }
 
     
-public function process_withdrawal($user_id) {
-    $this->_check_admin();
-
-    $amount = $this->input->post('amount');
-    $user = $this->db->where('id', $user_id)->get('users')->row_array();
-
-    if ($user && is_numeric($amount) && $amount > 0) {
-        // Felhasználó ZeroCoin címe
-        $address = $user['address'];
-        
-        // ZeroChain API kulcsok lekérése
-        $zcApi = $this->db->get_where('settings', ['name' => 'zerochain_api'])->row_array();
-        $zcPrivateKey = $this->db->get_where('settings', ['name' => 'zerochain_privatekey'])->row_array();
-
-        // API hívás a kifizetéshez
-        $api_url = "https://zerochain.info/api/rawtxbuild/{$zcPrivateKey['value']}/{$address}/{$amount}/0/1/{$zcApi['value']}";
-        $result = file_get_contents($api_url);
-
-        if ($result === false) {
-            log_message('error', 'Error in file_get_contents');
-            $this->session->set_flashdata('error', 'Error with external API request.');
-            redirect('admin/user_details/' . $user_id);
-        }
-
-        // JSON válasz feldolgozása
-        $data = json_decode($result, true);
-        if (isset($data['txid']) && !empty($data['txid'])) {
-            $TxID = $data['txid'];
-
-            // Kifizetés sikeres, beszúrjuk a withdrawals táblába
+    public function process_withdrawal($user_id) {
+        $this->_check_admin();
+    
+        $amount = $this->input->post('amount');
+        $user = $this->db->where('id', $user_id)->get('users')->row_array();
+    
+        if ($user && is_numeric($amount) && $amount > 0) {
+            // Kifizetési kérelem rögzítése 'Pending' státusszal
             $this->db->insert('withdrawals', [
                 'user_id' => $user_id,
                 'amount' => $amount,
-                'status' => 'Paid',
-                'txid' => $TxID,
-                'requested_at' => date('Y-m-d H:i:s')
+                'status' => 'Pending',
+                'requested_at' => date('Y-m-d H:i:s')  // A helyes oszlopnév
             ]);
+    
+            // Felhasználó adatai
+            $address = $user['address']; // Felhasználó ZeroCoin címe
+    
+            // ZeroChain API kulcsok lekérése
+            $zcApi = $this->db->get_where('settings', ['name' => 'zerochain_api'])->row_array();
+            $zcPrivateKey = $this->db->get_where('settings', ['name' => 'zerochain_privatekey'])->row_array();
+    
+            // API hívás a kifizetéshez
+            $result = file_get_contents("https://zerochain.info/api/rawtxbuild/{$zcPrivateKey['value']}/{$address}/{$amount}/0/1/{$zcApi['value']}");
+    
+            if ($result === false) {
+                log_message('error', 'Error in file_get_contents');
+                $this->session->set_flashdata('error', 'Error with external API request.');
+                redirect('admin/user_details/' . $user_id);
+            }
+    
+            // JSON válasz feldolgozása
+            $data = json_decode($result, true);
+            if (isset($data['txid'])) {
+                $TxID = $data['txid'];
+            } else {
+                $TxID = "";
+            }
+    
+        // Ha van tranzakciós ID, akkor frissítjük az adatbázist
+        if ($TxID !== "") {
+            // Kifizetés sikeres, frissítjük az adatbázist
+            $this->db->set('status', 'Paid')
+                    ->set('txid', $TxID)
+                    ->where('user_id', $user_id)
+                    ->where('status', 'Pending')
+                    ->update('withdrawals');
 
-            // Levonjuk az összeget a felhasználó egyenlegéből
-            $this->db->set('balance', 'balance - ' . $amount, FALSE);
+            // Levonjuk a kifizetett összeget a felhasználó egyenlegéből
+            $this->db->set('balance', 'balance - ' . $amount, FALSE);  // Levonás
             $this->db->where('id', $user_id);
             $this->db->update('users');
 
@@ -465,17 +517,60 @@ public function process_withdrawal($user_id) {
             $this->db->where('id', $user_id);
             $this->db->update('users');
 
-            $this->session->set_flashdata('success', 'Withdrawal processed successfully.');
+            // Üzenet küldése a sikeres kifizetésről
+            $this->session->set_flashdata('success', 'Withdrawal request approved and processed.');
         } else {
-            log_message('error', 'API Error: Failed to generate TxID for user ID ' . $user_id);
-            $this->session->set_flashdata('error', 'API error: Failed to generate TxID. Please check the address or try again later.');
+            log_message('error', 'API Error: Could not process withdrawal for user ID ' . $user_id);
+            $this->session->set_flashdata('error', 'API error. Could not process withdrawal.');
         }
-    } else {
-        $this->session->set_flashdata('error', 'Invalid amount or user.');
+        } else {
+            $this->session->set_flashdata('error', 'Invalid amount or user.');
+        }
+    
+        redirect('admin/user_details/' . $user_id);
     }
-
-    redirect('admin/user_details/' . $user_id);
-}
-
        
+		public function offerwalls_pending() {
+		    // Lekérjük az összes "Pending" státuszú kérelmet az offerwall_history táblából
+		    $data['offerwalls'] = $this->db->where('status', 'Pending')->get('offerwall_history')->result_array();
+		
+		    // Ellenőrizzük, hogy érkezett-e művelet (jóváhagyás vagy elutasítás)
+		    if ($this->input->post('action')) {
+		        $id = $this->input->post('id'); // A rekord ID-ja
+		        $action = $this->input->post('action'); // 'approve' vagy 'reject'
+		
+		        if ($action === 'approve') {
+		            // Jóváhagyás: Frissítjük a státuszt 'Paid'-re
+		            $this->db->set('status', 'Paid')->where('id', $id)->update('offerwall_history');
+		
+		            // Opcionálisan: hozzáadhatjuk az összegét a felhasználó számlájához, ha van ilyen funkció.
+		            $offer = $this->db->where('id', $id)->get('offerwall_history')->row_array();
+		            if ($offer) {
+		                $this->db->set('credits', 'credits + ' . $offer['amount'], false)
+		                    ->where('id', $offer['user_id'])
+		                    ->update('users');
+		            }
+		
+		            $this->session->set_flashdata('success', "Offerwall ID {$id} approved successfully.");
+		        } elseif ($action === 'reject') {
+		            // Elutasítás: Frissítjük a státuszt 'Rejected'-re
+		            $this->db->set('status', 'Rejected')->where('id', $id)->update('offerwall_history');
+		            $this->session->set_flashdata('success', "Offerwall ID {$id} rejected successfully.");
+		        } else {
+		            $this->session->set_flashdata('error', 'Invalid action specified.');
+		        }
+		
+		        // Visszairányítás az offerwall_pending oldalra
+		        redirect('admin/offerwalls_pending');
+		    }
+    
+				$settings = $this->Settings_model->get_settings();
+		    // Betöltjük a nézetet
+		    $this->_load_view('offerwalls_pending', [
+		        'title' => 'Pending Offerwalls',
+		        'offerwalls' => $data['offerwalls'],
+		        'settings' => $settings
+		    ]);
+		}
+
 }

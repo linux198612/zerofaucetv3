@@ -39,6 +39,36 @@ class Dashboard extends My_Controller {
         $this->render('dashboard', $data);
     }
 
+	public function convert_credits() {
+    $userId = $this->session->userdata('user_id');
+    $user = $this->db->get_where('users', ['id' => $userId])->row_array();
+
+    // Ellenőrizzük, hogy van-e elegendő credit
+    if ($user['credits'] > 0) {
+        $settings = $this->db->get_where('settings', ['name' => 'currency_value'])->row_array();
+        $zeroRate = $settings['value']; // Zero árfolyam USD-ben
+
+        // Számítás: 1000 credit = 1 cent (0.01 USD)
+        $usdValue = $user['credits'] / 1000 * 0.01;
+        $zeroValue = $usdValue / $zeroRate;
+
+        // Adatbázis frissítése
+        $this->db->set('balance', 'balance + ' . $zeroValue, FALSE);
+        $this->db->set('credits', 0); // Credit egyenleg nullázása
+        $this->db->where('id', $userId);
+        $this->db->update('users');
+
+        // Sikeres konvertálás üzenet
+        $this->session->set_flashdata('success', 'Credits successfully converted to Zero!');
+    } else {
+        // Hibaüzenet
+        $this->session->set_flashdata('error', 'You do not have enough credits to convert.');
+    }
+
+    redirect('dashboard');
+}
+
+
     public function logout() {
         $this->session->sess_destroy();
         redirect('home');

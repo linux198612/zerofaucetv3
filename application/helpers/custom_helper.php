@@ -56,7 +56,7 @@ function timeElapsedString($datetime, $full = false) {
         $footerHtml = '<footer class="footer">
             <div class="container">
                 <p>&copy; ' . date('Y') . ' ' . htmlspecialchars($settings['faucet_name']) . '. All rights reserved.</p>
-                <p>Powered by <a href="http://coolscript.hu" target="_blank" rel="noopener noreferrer">CoolScript ZeroFaucet 0.95.4</a></p>
+                <p>Powered by <a href="http://coolscript.hu" target="_blank" rel="noopener noreferrer">CoolScript ZeroFaucet 0.96.0</a></p>
             </div>
         </footer>';
     
