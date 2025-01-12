@@ -18,7 +18,7 @@
 		         </div>
                 <div class="mb-3">
                     <label for="cmc_api" class="form-label">CoinMarketCap api</label>
-                    <input type="text" name="cmc_api" id="cmc_api" value="<?= isset($settings['cmc_api']) ? $settings['cmc_api'] : '' ?>" class="form-control" required>
+                    <input type="text" name="cmc_api" id="cmc_api" value="<?= isset($settings['cmc_api']) ? $settings['cmc_api'] : '' ?>" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary">Save Settings</button>
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>" />

@@ -52,15 +52,15 @@
                 </div>
                 <div class="mb-3">
                     <label for="bitcotasks_api" class="form-label">Bitcotasks Api Key</label>
-                    <input type="text" name="bitcotasks_api" id="bitcotasks_api" value="<?= isset($settings['bitcotasks_api']) ? $settings['bitcotasks_api'] : '' ?>" class="form-control" required>
+                    <input type="text" name="bitcotasks_api" id="bitcotasks_api" value="<?= isset($settings['bitcotasks_api']) ? $settings['bitcotasks_api'] : '' ?>" class="form-control">
                 </div>
                 <div class="mb-3">
                     <label for="bitcotasks_secret" class="form-label">Bitcotasks Secret Key</label>
-                    <input type="text" name="bitcotasks_secret" id="bitcotasks_secret" value="<?= isset($settings['bitcotasks_secret']) ? $settings['bitcotasks_secret'] : '' ?>" class="form-control" required>
+                    <input type="text" name="bitcotasks_secret" id="bitcotasks_secret" value="<?= isset($settings['bitcotasks_secret']) ? $settings['bitcotasks_secret'] : '' ?>" class="form-control">
                 </div>
                 <div class="mb-3">
                     <label for="bitcotasks_bearer_token" class="form-label">Bitcotasks Bearer Token</label>
-                    <input type="text" name="bitcotasks_bearer_token" id="bitcotasks_bearer_token" value="<?= isset($settings['bitcotasks_bearer_token']) ? $settings['bitcotasks_bearer_token'] : '' ?>" class="form-control" required>
+                    <input type="text" name="bitcotasks_bearer_token" id="bitcotasks_bearer_token" value="<?= isset($settings['bitcotasks_bearer_token']) ? $settings['bitcotasks_bearer_token'] : '' ?>" class="form-control">
                 </div>
                 <button type="submit" class="btn btn-primary">Save Settings</button>
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>" />

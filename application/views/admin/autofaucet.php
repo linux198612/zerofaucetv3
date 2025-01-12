@@ -34,7 +34,7 @@
 
         <div class="mb-3">
             <label for="rewardEnergy" class="form-label">Reward Energy</label>
-            <input type="text" name="rewardEnergy" id="rewardEnergy" value="<?= isset($settings['rewardEnergy']) ? $settings['rewardEnergy'] : '' ?>" class="form-control" required>
+            <input type="text" name="rewardEnergy" id="rewardEnergy" value="<?= isset($settings['rewardEnergy']) ? $settings['rewardEnergy'] : '' ?>" class="form-control">
         </div>
 
         <div class="mb-3">

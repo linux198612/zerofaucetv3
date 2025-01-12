@@ -13,6 +13,7 @@
 <p><strong>Address:</strong> <?= htmlspecialchars($user['address']) ?></p>
 <p><strong>Balance:</strong> <?= number_format($user['balance'], 8) ?> ZER</p>
 <p><strong>Energy:</strong> <?= htmlspecialchars($user['energy']) ?></p>
+<p><strong>Credits:</strong> <?= htmlspecialchars($user['credits']) ?></p>
 
 <h3>Manual Edit</h3>
 <form method="post" action="<?= base_url('admin/user_details/' . $user['id']) ?>">
@@ -23,6 +24,10 @@
     <div class="form-group">
         <label for="energy">Energy</label>
         <input type="number" class="form-control" id="energy" name="energy" value="<?= htmlspecialchars($user['energy']) ?>" required>
+    </div>
+    <div class="form-group">
+        <label for="energy">Credits</label>
+        <input type="number" class="form-control" id="credits" name="credits" value="<?= htmlspecialchars($user['credits']) ?>" required>
     </div>
     <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>" />
     <button type="submit" class="btn btn-primary">Save Changes</button>
