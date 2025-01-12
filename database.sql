@@ -53,7 +53,7 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 ('15', 'banner_left_faucet', ''),
 ('16', 'banner_right_faucet', ''),
 ('17', 'energyshop_status', 'on'),
-('18', 'currency_value', ''),
+('18', 'currency_value', '0.000000'),
 ('19', 'faucet_timer', '30'),
 ('20', 'faucet_daily_limit', '10'),
 ('21', 'faucet_status', 'on'),
