@@ -1,4 +1,3 @@
-version: 0.96.0
 Admin panel:
 https://yourdomain.com/admin
 admin login:
