@@ -8,51 +8,76 @@ class My_Controller extends CI_Controller {
         $this->load->model('Settings_model');
         $this->settings = $this->Settings_model->get_settings();
 
-        // Beállítjuk az aktuális felhasználót, ha van bejelentkezve
-        $userId = $this->session->userdata('user_id');
-        if ($userId) {
-            $this->load->database();
-            $this->currentUser = $this->db->get_where('users', ['id' => $userId])->row_array();
-        }
     }
 
-    protected function render($view, $data = []) {
 
-        $data['settings'] = $this->settings;
-        $data['user'] = $this->currentUser; // Elérhetővé tesszük a nézetek számára
-        $data['content'] = $this->load->view($view, $data, TRUE);
-        $this->load->view('template', $data);
-    }
-
-    protected function is_logged_in() {
-        return $this->currentUser !== null; // Ellenőrizzük, hogy van-e bejelentkezett felhasználó
-    }
-
-	    // API kérések kezelése
-    protected function requestWithCurl($url, $token) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            "Authorization: Bearer $token"
-        ]);
-        $response = curl_exec($ch);
-        if(curl_errno($ch)) {
-            $response = false;
-        }
-        curl_close($ch);
-        return $response;
-    }
-
-    // PTC kampányadatok lekérése
-    protected function get_ptc_campaigns($apiKey, $userId, $userIp, $bearerToken) {
-        $url = "https://bitcotasks.com/api/$apiKey/$userId/$userIp";
-        $response = $this->requestWithCurl($url, $bearerToken);
-        if ($response) {
-            return json_decode($response, true);
-        }
-        return null;
-    }
-    
     
 }
+
+class Admin_Controller extends MY_Controller
+{
+	function __construct()
+	{
+		parent::__construct();
+		
+
+	 $current_uri = uri_string(); // Csak az aktuális URI-t vesszük
+    if ($current_uri != 'admin' && $current_uri != 'admin/login') {
+			if($this->session->userdata('admin') == NULL){
+			 return redirect(site_url('admin'));
+			}
+		} elseif ($this->session->userdata('admin') != NULL) {
+			return redirect(site_url('admin/dashboard'));
+		}
+	}
+
+	protected function _load_view($view, $data = []) {
+		    $data['content'] = $this->load->view("admin/{$view}", $data, TRUE);
+		    $this->load->view('admin/template', $data);
+		}
+}
+
+class Member_Controller extends MY_Controller
+{
+    function __construct()
+    {
+        parent::__construct();
+
+        // Karbantartási mód ellenőrzése
+        if (check_maintenance()) {
+            redirect('page/maintenance');
+            exit();
+        }
+        
+        // Ellenőrizzük a bejelentkezést
+        $userId = $this->session->userdata('user_id');
+        if (!$userId || !is_numeric($userId)) {
+            $this->session->sess_destroy();
+            redirect(site_url());
+            exit();
+        }
+
+        // Betöltjük az aktuális felhasználót
+        $this->currentUser = $this->db->get_where('users', ['id' => $userId])->row_array();
+        if (!$this->currentUser) {
+            $this->session->sess_destroy();
+            redirect(site_url());
+            exit();
+        }
+
+        // Automatikusan átadjuk a felhasználói adatokat a nézetekhez
+        $this->load->vars(['user' => $this->currentUser]);
+    }
+
+    protected function _load_view($view, $data = []) {
+        // A beállításokat automatikusan hozzáadjuk az adatokhoz
+        $data['settings'] = $this->settings;
+
+        // Betöltjük a tartalmat a nézethez
+        $data['content'] = $this->load->view("{$view}", $data, TRUE);
+
+        // Betöltjük a sablont
+        $this->load->view('template', $data);
+    }
+}
+

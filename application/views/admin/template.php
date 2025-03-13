@@ -30,6 +30,7 @@
                     <h5 class="text-white text-center">Admin Menu</h5>
                     <a href="<?= base_url('admin/dashboard') ?>">Dashboard</a>
                     <a href="<?= base_url('admin/home_settings') ?>">Home</a>
+                    <a href="<?= base_url('admin/challenge') ?>">Challenge</a>
                     <a href="<?= base_url('admin/autofaucet') ?>">Autofaucet</a>
                     <a href="<?= base_url('admin/offerwalls') ?>">Offerwalls</a>
 						  <a href="<?= base_url('admin/offerwalls_pending') ?>">Offerwalls Pending</a>

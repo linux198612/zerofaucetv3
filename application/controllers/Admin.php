@@ -1,26 +1,41 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Admin extends CI_Controller {
+class Admin extends Admin_Controller {
 
     public function __construct() {
         parent::__construct();
-        $this->load->database();
-        $this->load->library('session');
-        $this->load->helper(['url', 'form']);
         $this->load->model('Settings_model');
+        $this->load->model('Challenge_model');
+        
     }
 
-		private function _load_view($view, $data = []) {
-		    $data['content'] = $this->load->view("admin/{$view}", $data, TRUE);
-		    $this->load->view('admin/template', $data);
-		}
+    // Belépési oldal
+    public function login() {
+        if ($this->session->userdata('admin')) {
+            redirect('admin/dashboard');
+        }
 
-        private function _check_admin() {
-            if (!$this->session->userdata('admin_logged_in')) {
-                redirect('admin/login');
+        if ($this->input->post()) {
+            $username = $this->input->post('username');
+            $password = $this->input->post('password');
+
+            $query = $this->db->get_where('settings', ['name' => 'admin_username']);
+            $admin_username = $query->row()->value;
+
+            $query = $this->db->get_where('settings', ['name' => 'admin_password']);
+            $admin_password = $query->row()->value;
+
+            if ($username === $admin_username && password_verify($password, $admin_password)) {
+                $this->session->set_userdata('admin', true);
+                redirect('admin/dashboard');
+            } else {
+                $this->session->set_flashdata('error', 'Invalid username or password.');
             }
         }
+
+        $this->load->view('admin/login');
+    }
 
         public function settings_save() {
             if ($this->input->method() === 'post') {
@@ -58,37 +73,9 @@ class Admin extends CI_Controller {
         }
         
 
-
-    // Belépési oldal
-    public function login() {
-        if ($this->session->userdata('admin_logged_in')) {
-            redirect('admin/dashboard');
-        }
-
-        if ($this->input->post()) {
-            $username = $this->input->post('username');
-            $password = $this->input->post('password');
-
-            $query = $this->db->get_where('settings', ['name' => 'admin_username']);
-            $admin_username = $query->row()->value;
-
-            $query = $this->db->get_where('settings', ['name' => 'admin_password']);
-            $admin_password = $query->row()->value;
-
-            if ($username === $admin_username && password_verify($password, $admin_password)) {
-                $this->session->set_userdata('admin_logged_in', true);
-                redirect('admin/dashboard');
-            } else {
-                $this->session->set_flashdata('error', 'Invalid username or password.');
-            }
-        }
-
-        $this->load->view('admin/login');
-    }
-
     // Kijelentkezés
     public function logout() {
-        $this->session->unset_userdata('admin_logged_in');
+        $this->session->unset_userdata('admin');
         redirect('admin/login');
     }
 
@@ -104,6 +91,54 @@ class Admin extends CI_Controller {
         ]);
     }
     
+        public function challenge($action = 'list', $id = null) {
+        $data = []; // Nézethez használt adatok
+        $data['pageTitle'] = 'Manage Challenges';
+
+        if ($action === 'list') {
+            // Kihívások listázása
+            $data['view'] = 'list';
+            $data['challenges'] = $this->Challenge_model->get_all_challenges();
+        } elseif ($action === 'add') {
+            // Új kihívás hozzáadása
+            if ($this->input->post()) {
+                $challengeData = [
+                    'name' => $this->input->post('name'),
+                    'type' => $this->input->post('type'),
+                    'target' => $this->input->post('target'),
+                    'reward' => $this->input->post('reward'),
+                ];
+                $this->Challenge_model->add_challenge($challengeData);
+                redirect('admin/challenge');
+            }
+            $data['view'] = 'form';
+            $data['pageTitle'] = 'Add Challenge';
+        } elseif ($action === 'edit' && $id) {
+            // Kihívás szerkesztése
+            if ($this->input->post()) {
+                $challengeData = [
+                    'name' => $this->input->post('name'),
+                    'type' => $this->input->post('type'),
+                    'target' => $this->input->post('target'),
+                    'reward' => $this->input->post('reward'),
+                ];
+                $this->Challenge_model->update_challenge($id, $challengeData);
+                redirect('admin/challenge');
+            }
+            $data['view'] = 'form';
+            $data['pageTitle'] = 'Edit Challenge';
+            $data['challenge'] = $this->Challenge_model->get_challenge_by_id($id);
+        } elseif ($action === 'delete' && $id) {
+            // Kihívás törlése
+            $this->Challenge_model->delete_challenge($id);
+            redirect('admin/challenge');
+        } else {
+            show_404();
+        }
+
+        // Minden nézet ugyanazon fájlon belül kezelt
+        $this->_load_view('challenge', $data);
+    }
         // Offerwalls
     public function offerwalls() {
 
@@ -152,7 +187,7 @@ class Admin extends CI_Controller {
 
     // Jelszó módosítás
     public function change_password() {
-        $this->_check_admin();
+
 
         if ($this->input->post()) {
             $current_password = $this->input->post('current_password');
@@ -192,89 +227,88 @@ class Admin extends CI_Controller {
         ]);
     }
 
-    public function pending_withdraw() {
-        // "Pending" státuszú tételek lekérése
-        $data['withdrawals'] = $this->db->where('status', 'Pending')->get('withdrawals')->result_array();
+    // API hívás funkció
+    private function call_zerochain_api($url) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10); // Maximum 10 másodperc várakozás
+        $response = curl_exec($ch);
+        curl_close($ch);
 
-        if ($this->input->post('action')) {
-            $id = $this->input->post('id');
-            $action = $this->input->post('action'); // 'approve' vagy 'reject'
+        return $response;
+    }
 
-            if ($action === 'approve') {
-                $withdrawal = $this->db->where('id', $id)->get('withdrawals')->row_array();
-                if ($withdrawal) {
+public function pending_withdraw() {
+    $data['withdrawals'] = $this->db->where('status', 'Pending')->get('withdrawals')->result_array();
 
-                    // Felhasználói adatok lekérése
-                    $user = $this->db->where('id', $withdrawal['user_id'])->get('users')->row_array();
-                    $address = $user['address']; // Felhasználó ZeroCoin címe
-                    $amount = $withdrawal['amount'];
+    if ($this->input->post('action')) {
+        $id = $this->input->post('id');
+        $action = $this->input->post('action');
 
-                    // Zárolás, hogy ne lehessen többször kifizetést indítani
-                    if (isset($_SESSION['withdraw_lock']) && $_SESSION['withdraw_lock'] === true) {
-                        $this->session->set_flashdata('error', 'Please wait before trying again.');
-                        redirect('admin/pending_withdraw');
-                    }
+        if ($action === 'approve') {
+            $this->db->trans_start(); // Adatbázis tranzakció indítása
+            $withdrawal = $this->db->where('id', $id)
+                                   ->where('status', 'Pending') // Csak 'Pending' státuszú tételt engedünk
+                                   ->get('withdrawals')
+                                   ->row_array();
 
-                    // Lock aktiválása
-                    $_SESSION['withdraw_lock'] = true;
+            if ($withdrawal) {
+                // A kifizetés státuszának átállítása 'Processing'-re
+                $this->db->set('status', 'Processing')
+                         ->where('id', $id)
+                         ->update('withdrawals');
 
-                    // ZeroChain API adatok lekérdezése
-                    $zcApi = $this->db->get_where('settings', ['name' => 'zerochain_api'])->row_array();
-                    $zcPrivateKey = $this->db->get_where('settings', ['name' => 'zerochain_privatekey'])->row_array();
+                $user = $this->db->where('id', $withdrawal['user_id'])->get('users')->row_array();
+                $address = $user['address'];
+                $amount = $withdrawal['amount'];
 
-                    // API hívás a kifizetéshez
-                    $result = file_get_contents("https://zerochain.info/api/rawtxbuild/{$zcPrivateKey['value']}/{$address}/{$amount}/0/1/{$zcApi['value']}");
+                $zcApi = $this->db->get_where('settings', ['name' => 'zerochain_api'])->row_array();
+                $zcPrivateKey = $this->db->get_where('settings', ['name' => 'zerochain_privatekey'])->row_array();
 
-                    if ($result === false) {
-                        $this->session->set_flashdata('error', 'Error with external API request.');
-                        unset($_SESSION['withdraw_lock']);
-                        redirect('admin/pending_withdraw');
-                    }
+                $result = file_get_contents("https://zerochain.info/api/rawtxbuild/{$zcPrivateKey['value']}/{$address}/{$amount}/0/1/{$zcApi['value']}");
+                $data = json_decode($result, true);
 
-                    // JSON válasz feldolgozása
-                    $data = json_decode($result, true);
-                    if (isset($data['txid'])) {
-                        $TxID = $data['txid'];
-                    } else {
-                        $TxID = "";
-                    }
+                if (isset($data['txid'])) {
+                    $TxID = $data['txid'];
 
-                    // Ha van tranzakciós ID, akkor frissítjük az adatbázist
-                    if ($TxID !== "") {
-                        // Kifizetés sikeres, frissítjük az adatbázist
-                        $this->db->set('status', 'Paid')
-                                ->set('txid', $TxID)
-                                ->where('id', $id)
-                                ->update('withdrawals');
+                    // Frissítjük az adatbázist 'Paid' státuszra
+                    $this->db->set('status', 'Paid')
+                             ->set('txid', $TxID)
+                             ->where('id', $id)
+                             ->update('withdrawals');
 
-                        // Felhasználó egyenlegének frissítése
-                        $this->db->set('total_withdrawals', 'total_withdrawals + ' . $amount, FALSE);
-                        $this->db->where('id', $withdrawal['user_id']);
-                        $this->db->update('users');
+                    // Felhasználói egyenleg frissítése
+                    $this->db->set('total_withdrawals', 'total_withdrawals + ' . $amount, FALSE)
+                             ->where('id', $withdrawal['user_id'])
+                             ->update('users');
 
-                        $this->session->set_flashdata('message', "Withdrawal ID {$id} approved and processed.");
-                    } else {
-                        $this->session->set_flashdata('error', "API error. Could not process withdrawal ID {$id}.");
-                    }
-
-                    // Lock eltávolítása
-                    unset($_SESSION['withdraw_lock']);
+                    $this->session->set_flashdata('message', "Withdrawal ID {$id} approved and processed.");
                 } else {
-                    $this->session->set_flashdata('error', "Withdrawal ID {$id} not found.");
+                    // Hiba esetén visszaállítjuk az állapotot 'Pending'-re
+                    $this->db->set('status', 'Pending')
+                             ->where('id', $id)
+                             ->update('withdrawals');
+
+                    $this->session->set_flashdata('error', "API error. Could not process withdrawal ID {$id}.");
                 }
+            } else {
+                $this->session->set_flashdata('error', "Withdrawal ID {$id} not found or already processed.");
+            }
+
+            $this->db->trans_complete(); // Adatbázis tranzakció vége
         } elseif ($action === 'reject') {
-            // Elutasított tétel frissítése
             $withdrawal = $this->db->where('id', $id)->get('withdrawals')->row_array();
             if ($withdrawal) {
                 $amount = $withdrawal['amount'];
 
-                // Frissítjük a kifizetés státuszát 'Rejected'-re
-                $this->db->set('status', 'Rejected')->where('id', $id)->update('withdrawals');
+                $this->db->set('status', 'Rejected')
+                         ->where('id', $id)
+                         ->update('withdrawals');
 
-                // Visszarakjuk a visszautasított összeget a felhasználó egyenlegébe
-                $this->db->set('balance', 'balance + ' . $amount, FALSE);
-                $this->db->where('id', $withdrawal['user_id']);
-                $this->db->update('users');
+                $this->db->set('balance', 'balance + ' . $amount, FALSE)
+                         ->where('id', $withdrawal['user_id'])
+                         ->update('users');
 
                 $this->session->set_flashdata('message', "Withdrawal ID {$id} rejected and balance refunded.");
             } else {
@@ -285,9 +319,8 @@ class Admin extends CI_Controller {
         redirect('admin/pending_withdraw');
     }
 
-    $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
+    $settings = $this->Settings_model->get_settings();
 
-    // Nézet betöltése
     $this->_load_view('pending_withdraw', [
         'title' => 'Pending Withdrawals',
         'withdrawals' => $data['withdrawals'],
@@ -296,7 +329,6 @@ class Admin extends CI_Controller {
 }
 
 	public function autofaucet() {
-	    $this->_check_admin();  // Admin jogosultság ellenőrzése
 	
         $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
 	
@@ -305,7 +337,6 @@ class Admin extends CI_Controller {
 	}
 	
 		public function cronjob() {
-	    $this->_check_admin();  // Admin jogosultság ellenőrzése
 	
         $settings = $this->Settings_model->get_settings(); // Beállítások lekérése a modellből
 	
@@ -315,7 +346,7 @@ class Admin extends CI_Controller {
 
     public function energy_shop()
     {
-        $this->_check_admin(); // Admin ellenőrzés
+  
     
         if ($this->input->post('action') === 'save_package') {
             // Csomag mentése
@@ -359,7 +390,7 @@ class Admin extends CI_Controller {
     
     public function energyshop_delete($id)
     {
-        $this->_check_admin(); // Ellenőrzés
+
 
         // Csomag törlése
         $this->db->where('id', $id)->delete('energyshop_packages');
@@ -369,7 +400,7 @@ class Admin extends CI_Controller {
     }
 
     public function users() {
-        $this->_check_admin(); // Ellenőrizzük az admin bejelentkezést
+
     
         // Felhasználók lekérése az adatbázisból
         $data['users'] = $this->db->get('users')->result_array();
@@ -384,7 +415,7 @@ class Admin extends CI_Controller {
     
     public function user_details($user_id)
     {
-        $this->_check_admin();
+
     
         // Felhasználó adatainak lekérése
         $user = $this->db->where('id', $user_id)->get('users')->row_array();
@@ -434,7 +465,7 @@ class Admin extends CI_Controller {
     
     public function withdraw_logs()
 {
-    $this->_check_admin();
+
 
     // Logok lekérdezése
     $logs = $this->db->order_by('logged_at', 'DESC')->get('withdraw_log')->result_array();
@@ -450,7 +481,7 @@ class Admin extends CI_Controller {
 
 public function delete_withdraw_log($id)
 {
-    $this->_check_admin();
+
 
     // Log törlése az ID alapján
     $this->db->where('id', $id)->delete('withdraw_log');
@@ -460,7 +491,7 @@ public function delete_withdraw_log($id)
 
     
     public function process_withdrawal($user_id) {
-        $this->_check_admin();
+
     
         $amount = $this->input->post('amount');
         $user = $this->db->where('id', $user_id)->get('users')->row_array();

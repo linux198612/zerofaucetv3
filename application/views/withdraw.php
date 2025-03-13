@@ -49,11 +49,13 @@
         <button type="submit" class="btn btn-primary" id="withdrawButton">Request Withdrawal (<?= number_format($balance, 8) ?> ZER)</button>
     </form>
 <?php else: ?>
-    <p class="text-danger">Insufficient balance. You need at least <?= $minZero ?> ZER to withdraw.</p>
+    <button type="submit" class="btn btn-primary disabled" id="withdrawButton">Request Withdrawal (<?= number_format($balance, 8) ?> ZER)</button>
 <?php endif; ?>
 
 <?php if ($settings['manual_withdraw'] === 'on'): ?>
     <p class="text-warning">All withdrawals will be manually approved.</p>
+    <?php else: ?>
+    <p class="text-warning">All payments are made instantly.</p>
 <?php endif; ?>
 
 </div>

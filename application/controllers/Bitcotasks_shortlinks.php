@@ -1,18 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Bitcotasks_shortlinks extends My_Controller {
+class Bitcotasks_shortlinks extends Member_Controller {
 
     public function __construct() {
         parent::__construct();
-        // Egyedi beállítások vagy inicializálások a shortlinkekhez
+
     }
 
     public function index() {
-        // Ellenőrizzük, hogy be van-e jelentkezve a felhasználó
-        if (!$this->is_logged_in()) {
-            redirect('login'); // Átirányítjuk a felhasználót a bejelentkezési oldalra
-        }
 
         // API paraméterek beállítása
   		  $apiKey = $this->settings['bitcotasks_api']; // Cseréld ki a saját API kulcsodra
@@ -46,7 +42,23 @@ class Bitcotasks_shortlinks extends My_Controller {
     }
 		  $data['pageTitle'] = 'Bitcotasks Shortlinks';
         // Megjelenítjük az adatokat
-        $this->render('bitcotasks_shortlinks', $data);
+        $this->_load_view('bitcotasks_shortlinks', $data);
+    }
+
+	    // API kérések kezelése
+    protected function requestWithCurl($url, $token) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer $token"
+        ]);
+        $response = curl_exec($ch);
+        if(curl_errno($ch)) {
+            $response = false;
+        }
+        curl_close($ch);
+        return $response;
     }
 
     private function get_shortlink_campaigns($apiKey, $userId, $userIp, $bearerToken) {
@@ -55,6 +67,6 @@ class Bitcotasks_shortlinks extends My_Controller {
         if ($response) {
             return json_decode($response, true);
         }
-        return ['status' => 500, 'message' => 'Nem sikerült csatlakozni az API-hoz.'];
+        return ['status' => 500, 'message' => 'Failed to connect to API.'];
     }
 }

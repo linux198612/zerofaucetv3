@@ -1,4 +1,4 @@
-version: 0.96.1
+version: 0.96.0
 Admin panel:
 https://yourdomain.com/admin
 admin login:
@@ -24,4 +24,10 @@ news (0.95->0.96):
 - offerwalls added bitcotasks
 - add bitcotasks ptc and shortlinks menu (bearer token)
 - add zerads ptc
+- bugfix
+
+news (0.96.x -> 0.97.0)
+- add Challenge
+- add Offerwallmedia offers
+- updates offerwalls reward auto converting to ZER
 - bugfix

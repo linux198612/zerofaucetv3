@@ -84,7 +84,11 @@ INSERT INTO `settings` (`id`, `name`, `value`) VALUES
 ('46', 'zerads_id', ''),
 ('47', 'zerads_exchange_value', ''),
 ('48', 'zerads_password', ''),
-('49', 'cmc_api', '');
+('49', 'cmc_api', ''),
+('50', 'challenge_status', 'on'),
+('51', 'offerwallmedia_status', 'off'),
+('52', 'offerwallmedia_api', ''),
+('53', 'offerwallmedia_secret', '');
 
 CREATE TABLE `energyshop_packages` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,

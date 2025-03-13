@@ -67,6 +67,30 @@
             </form>
         </div>
     </div>
+    
+            <div class="card-body">
+        <div class="alert alert-info">Postback url: <?= base_url('confirm/offerwallmedia') ?></div>
+        <form method="post" action="<?= base_url('admin/settings_save') ?>">
+                <div class="mb-3">
+                    <label for="offerwallmedia_status" class="form-label">Offerwallmedia Status</label>
+                    <select name="offerwallmedia_status" id="offerwallmedia_status" class="form-select">
+                        <option value="on" <?= isset($settings['offerwallmedia_status']) && $settings['offerwallmedia_status'] === 'on' ? 'selected' : '' ?>>On</option>
+                        <option value="off" <?= isset($settings['offerwallmedia_status']) && $settings['offerwallmedia_status'] === 'off' ? 'selected' : '' ?>>Off</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="offerwallmedia_api" class="form-label">Offerwallmedia Api Key</label>
+                    <input type="text" name="offerwallmedia_api" id="offerwallmedia_api" value="<?= isset($settings['offerwallmedia_api']) ? $settings['offerwallmedia_api'] : '' ?>" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label for="offerwallmedia_secret" class="form-label">Offerwallmedia Secret Key</label>
+                    <input type="text" name="offerwallmedia_secret" id="offerwallmedia_secret" value="<?= isset($settings['offerwallmedia_secret']) ? $settings['offerwallmedia_secret'] : '' ?>" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>" />
+            </form>
+        </div>
+    </div>
 
 
 </div>

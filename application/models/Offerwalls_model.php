@@ -31,12 +31,31 @@ class Offerwalls_model extends CI_Model {
         return $this->db->insert_id();
     }
 
-    // Felhasználó egyenlegének frissítése
-    public function updateUserBalance($userId, $reward) {
-        $this->db->set('credits', 'credits + ' . $reward, false);
-        $this->db->where('id', $userId);
-        $this->db->update('users');
+public function updateUserBalance($userId, $reward) {
+    // Settings lekérdezése az adatbázisból
+    $this->db->select('value');
+    $this->db->where('name', 'currency_value');
+    $query = $this->db->get('settings');
+    $result = $query->row_array();
+
+    if (!$result) {
+        log_message('error', 'Currency value not found in settings.');
+        return false; // Ha nem található az érték, visszatérünk
     }
+
+    $zeroRate = (float) $result['value']; // Lekérdezett árfolyam konvertálása float típusra
+
+    // Konverzió kiszámítása (USD -> Zero)
+    $usdValue = $reward / 1000 * 0.01; // Példa: 1000 credit = 0.01 USD
+    $zeroValue = $usdValue / $zeroRate; // USD -> Zero átváltás
+
+    // Adatbázis frissítése (balance mező növelése)
+    $this->db->set('balance', 'balance + ' . $zeroValue, false);
+    $this->db->where('id', $userId);
+    $this->db->update('users');
+    return true; // Sikeres frissítés esetén visszatérünk
+}
+
 
     // Felhasználó egyenlegének csökkentése
     public function reduceUserBalance($userId, $reward) {

@@ -1,5 +1,4 @@
 <style>
-
     .card {
         border: 0px;
     }
@@ -12,7 +11,7 @@
         background: #2a5298;
         color: #fff;
     }
-    
+
     .card-footer {
         background:  #1e3a5f; /* Sötétkék háttér */
         color: #fff;
@@ -36,6 +35,13 @@
                     <div class="card-body">
          				   <p><strong>Total clickable shortlinks:</strong> <?= $total_clicks ?></p>
       				      <p><strong>Total available reward:</strong> <?= number_format($total_reward, 2) . ' ' . htmlspecialchars($shortlinks['data'][0]['currency_name'] ?? 'N/A') ?></p>
+
+                      <?php
+                        // Zero érték kiszámítása
+                        $totalRewardInUSD = $total_reward * 0.00001; // Összjutalom USD-ben
+                        $totalRewardInZero = $totalRewardInUSD / $settings['currency_value']; // Zero Coin-ban
+                      ?>
+                      <p><strong>Total available reward in Zero:</strong> <?= number_format($totalRewardInZero, 8) ?> Zero</p>
                     </div>
                 </div>
             </div>
@@ -50,6 +56,14 @@
                             <h5 class="card-title"><?= htmlspecialchars($link['title']) ?></h5>
                             <p class="card-text">
                                 <strong>Reward:</strong> <?= htmlspecialchars($link['reward']) . ' ' . htmlspecialchars($link['currency_name']) ?><br>
+                                
+                                <?php
+                                    // Reward Zero-ban
+                                    $rewardInUSD = $link['reward'] * 0.00001;
+                                    $rewardInZero = $rewardInUSD / $settings['currency_value'];
+                                ?>
+                                <strong>Reward in Zero:</strong> <?= number_format($rewardInZero, 8) ?> Zero<br>
+                                
                                 <strong>Available:</strong> <?= htmlspecialchars($link['available']) ?><br>
                                 <strong>Limit:</strong> <?= htmlspecialchars($link['limit']) ?>
                             </p>
@@ -69,3 +83,4 @@
         <p>No shortlinks available.</p>
     <?php endif; ?>
 </div>
+

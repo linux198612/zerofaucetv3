@@ -46,6 +46,45 @@ public function bitcotasks() {
     }
 }
 
+public function offerwallmedia() {
+    $secret = $this->settings['offerwallmedia_secret']; // BitcoTasks secret kulcs
+    $minHold = 10000; // Minimum összeg manuális jóváhagyásra
+
+    $userId = isset($_REQUEST['subId']) ? $this->db->escape_str($_REQUEST['subId']) : null;
+    $transactionId = isset($_REQUEST['transId']) ? $this->db->escape_str($_REQUEST['transId']) : null;
+    $reward = isset($_REQUEST['reward']) ? $this->db->escape_str($_REQUEST['reward']) : null;
+    $userIp = isset($_REQUEST['userIp']) ? $this->db->escape_str($_REQUEST['userIp']) : "0.0.0.0";
+    $signature = isset($_REQUEST['signature']) ? $this->db->escape_str($_REQUEST['signature']) : null;
+
+    // Aláírás hitelesítése
+    if (md5($userId . $transactionId . $reward . $secret) != $signature) {
+        echo "ERROR: Signature doesn't match";
+        return;
+    }
+
+    // Duplikált tranzakció ellenőrzése
+    $trans = $this->Offerwalls_model->getTransaction($transactionId, 'offerwallmedia');
+    if ($trans) {
+        echo "DUP";
+        return;
+    }
+
+    // Jutalom feldolgozása
+    if ($reward >= $minHold) {
+        // 10 centnél nagyobb tranzakció manuális jóváhagyásra kerül
+        $this->Offerwalls_model->insertTransaction($userId, 'OfferwallMedia', $userIp, $reward, $transactionId, 'Pending', time());
+        echo "PENDING"; // Jelzi, hogy jóváhagyásra vár
+    } else {
+        // 10 centnél kisebb tranzakció automatikusan jóváírásra kerül
+        $this->Offerwalls_model->insertTransaction($userId, 'OfferwallMedia', $userIp, $reward, $transactionId, 'Paid', time());
+        $this->Offerwalls_model->updateUserBalance($userId, $reward);
+        echo "ok";
+
+        // Referral jutalom kezelése
+  //      $this->handle_referral($userId, $reward);
+    }
+}
+
 public function zerads() {
     $password = $this->settings['zerads_password']; // ZerAds API jelszó
 
@@ -75,8 +114,14 @@ public function zerads() {
     // Reward kiszámítása (float típusúra konvertáljuk)
     $reward = (float)$amount * $this->settings['zerads_exchange_value'];
 
+    $zeroRate = $this->settings['currency_value'];
+
+    // Konverzió kiszámítása (USD -> Zero)
+    $usdValue = $reward / 1000 * 0.01; // Példa: 1000 credit = 0.01 USD
+    $zeroValue = $usdValue / $zeroRate; // USD -> Zero átváltás
+    
     // Felhasználó egyenlegének frissítése
-    $this->db->set('credits', 'credits + ' . $reward, FALSE);
+    $this->db->set('balance', 'balance + ' . $zeroValue, FALSE);
     $this->db->where('id', $user);
     $update = $this->db->update('users');
 

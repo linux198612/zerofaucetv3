@@ -7,7 +7,6 @@
     <!-- Favicon -->
     <link rel="icon" href="<?= site_url('assets/favicon.png') ?>" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="<?= site_url('assets/js/main.js') ?>"></script>
     <style>
         body {
             background: linear-gradient(135deg, #1e3c72, #2a5298);
@@ -97,6 +96,7 @@
         <div class="section mb-4">
             <h1 class="display-5 fw-bold">Welcome to <?= $faucetName ?></h1>
             <p class="lead">Start collecting Zerocoins today!</p>
+            <p class="lead">Low minimum payout: 0.001 ZER</p>
         </div>
         <div class="text-center">
             <?= $bannerHeaderHome; ?>
@@ -107,13 +107,12 @@
             <?php if (isset($error)): ?>
                 <div class="alert alert-danger"> <?= $error ?> </div>
             <?php endif; ?>
-
-            <h3 class="mb-4">Login with Your Zerocoin Address</h3>
+         <h3 class="mb-4">Login with Your Zerocoin Address</h3>
 
             <form method="POST" action="">
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name(); ?>" value="<?= $this->security->get_csrf_hash(); ?>" />
                 <div class="mb-3">
-                    <input type="text" class="form-control" id="zerocoin_address" name="zerocoin_address" placeholder="Enter your Zerocoin address" required>
+                    <input type="text" class="form-control" id="address" name="address" placeholder="Enter your Zerocoin address" required>
                 </div>
                 <button type="submit" class="btn btn-primary w-100">Login</button>
             </form>

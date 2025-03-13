@@ -32,17 +32,29 @@ class Home extends CI_Controller {
 
         // Bejelentkezés kezelése
         if ($this->input->server('REQUEST_METHOD') === 'POST') {
-            $zerocoin_address = $this->input->post('zerocoin_address');
+            // Szóközök eltávolítása a Zerocoin cím elejéről és végéről
+            $zerocoin_address = trim($this->input->post('address'));
 
             // Ellenőrzés, hogy a Zerocoin cím érvényes-e
             if (strpos($zerocoin_address, 't1') !== 0 || filter_var($zerocoin_address, FILTER_VALIDATE_EMAIL)) {
                 $data['error'] = "Invalid Zerocoin address, please register a Zerocoin address at <a style='color:black;' target='_blank' href='https://zerochain.info'>https://zerochain.info</a>.";
             } else {
+                // Szóközök levágása után ellenőrizzük az adatbázisban
                 $user_id = $this->Auth_model->handleUserLogin($zerocoin_address, $referral_id);
                 if ($user_id) {
-                    // Bejelentkezés után sessionbe tároljuk a felhasználó ID-jét
+                    // Ellenőrizd, hogy az adatbázisban lévő cím tartalmaz-e szóközt
+                    $user = $this->db->get_where('users', ['id' => $user_id])->row_array();
+                    if ($user && trim($user['address']) !== $user['address']) {
+                        // Frissítsük az adatbázisban lévő címet a szóközök eltávolításával
+                        $this->db->where('id', $user_id);
+                        $this->db->update('users', ['address' => trim($user['address'])]);
+                    }
+
+                    // Sessionbe tároljuk a felhasználó ID-jét
                     $this->session->set_userdata('user_id', $user_id);
                     redirect('dashboard'); // Irányítás a Dashboard oldalra
+                } else {
+                    $data['error'] = "Login failed. Please check your Zerocoin address.";
                 }
             }
         }
@@ -53,9 +65,8 @@ class Home extends CI_Controller {
         $data['totalWithdrawals'] = $this->Home_model->getTotalWithdrawals();
         $data['withdrawals'] = $this->Home_model->getLastWithdrawals();
         
-		  $faucetName = $this->db->get_where('settings', ['name' => 'faucet_name'])->row_array();
-		  $data['faucetName'] = isset($faucetName['value']) ? $faucetName['value'] : ''; 
-
+        $faucetName = $this->db->get_where('settings', ['name' => 'faucet_name'])->row_array();
+        $data['faucetName'] = isset($faucetName['value']) ? $faucetName['value'] : ''; 
 
         $data['pageTitle'] = 'Home';
         
@@ -70,4 +81,5 @@ class Home extends CI_Controller {
         $this->load->view('faq', $data);
     }
 }
+
 

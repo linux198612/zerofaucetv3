@@ -1,27 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Energyshop extends My_Controller {
+class Energyshop extends Member_Controller {
 
     public function __construct() {
         parent::__construct();
     }
 
     public function index() {
-        $data['settings'] = $this->settings;
 
-        // Karbantartás ellenőrzés
-        if (check_maintenance()) {
-            redirect('page/maintenance');
-            exit();
-        }
-
-        // Felhasználó session ellenőrzés
-        if (!$this->session->userdata('user_id')) {
-            redirect('home');
-        }
-
-        $userId = $this->session->userdata('user_id');
+        $userId = $this->currentUser['id'];
 
         // Felhasználó adatainak lekérdezése (energy)
         $user = $this->db->select('energy')->where('id', $userId)->get('users')->row();
@@ -34,14 +22,10 @@ class Energyshop extends My_Controller {
         $data['pageTitle'] = 'Energy Shop';
 
         // Nézet renderelése
-        $this->render('energyshop', $data);
+        $this->_load_view('energyshop', $data);
     }
 
     public function buy() {
-        // Session ellenőrzés
-        if (!$this->session->userdata('user_id')) {
-            redirect('home');
-        }
 
         // Ellenőrizzük, hogy a kérés POST típusú-e
         if ($this->input->method() !== 'post') {
@@ -53,7 +37,7 @@ class Energyshop extends My_Controller {
             show_404();
         }
 
-        $userId = $this->session->userdata('user_id');
+        $userId = $this->currentUser['id'];
 
         // Felhasználó adatainak lekérdezése
         $user = $this->db->select('energy')->where('id', $userId)->get('users')->row();

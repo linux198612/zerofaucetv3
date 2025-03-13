@@ -1,22 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Withdraw extends My_Controller {
+class Withdraw extends Member_Controller {
 
     public function __construct() {
         parent::__construct();
-        $this->load->helper(['url', 'form']); // URL és form helper
-        $this->load->library('session'); // Session kezelés
-        $this->load->database(); // Adatbázis kapcsolat
+
     }
 
     public function index() {
-        $data['settings'] = $this->settings;
-        if (check_maintenance()) {
-            redirect('page/maintenance');
-            exit();
-        }
-
         $valid_referrer = parse_url(base_url(), PHP_URL_HOST);
         $referrer = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
         $referrer_host = parse_url($referrer, PHP_URL_HOST);
@@ -25,11 +17,8 @@ class Withdraw extends My_Controller {
             show_error('Invalid referrer. Request not allowed.');
         }
 
-        if (!$this->session->userdata('user_id')) {
-            redirect('home');
-        }
 
-        $userId = $this->session->userdata('user_id');
+        $userId = $this->currentUser['id'];
         $query = $this->db->get_where('users', ['id' => $userId]);
         $user = $query->row_array();
 
@@ -121,8 +110,7 @@ class Withdraw extends My_Controller {
         $data['withdrawals'] = $withdrawals;
 
         $data['pageTitle'] = 'Withdraw';
-        $data['content'] = $this->load->view('withdraw', $data, TRUE);
-        $this->load->view('template', $data);
+        $this->_load_view('withdraw', $data);
     }
 
     private function log_withdraw_error($userId, $amount, $address, $errorMessage) {

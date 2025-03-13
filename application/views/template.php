@@ -7,8 +7,7 @@
 <!-- Favicon -->
     <link rel="icon" href="<?= site_url('assets/favicon.png') ?>" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-	 <script src="<?= site_url('assets/js/main.js') ?>"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">t>
      <style>
         body {
             display: flex;
@@ -178,6 +177,7 @@
         <a href="<?= site_url('withdraw') ?>">Withdraw</a>
         <hr> 
         <?php $pages = [
+        'challenge' => 'Challenge',
     'autofaucet' => 'Autofaucet',
     'energyshop' => 'Energy Shop',
     'faucet' => 'Faucet',
@@ -201,6 +201,9 @@ foreach ($pages as $key => $label) {
             <div class="offerwalls-menu" id="offerwalls-menu">
                 <?php if (isset($settings['bitcotasks_status']) && $settings['bitcotasks_status'] == 'on'): ?>
                     <a href="<?= site_url('offerwalls/bitcotasks') ?>">Bitcotasks</a>
+                <?php endif; ?>
+                <?php if (isset($settings['offerwallmedia_status']) && $settings['offerwallmedia_status'] == 'on'): ?>
+                    <a href="<?= site_url('offerwalls/offerwallmedia') ?>">OfferwallMedia</a>
                 <?php endif; ?>
                 <!-- Add more offerwall links here -->
             </div>

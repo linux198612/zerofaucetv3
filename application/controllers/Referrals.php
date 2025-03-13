@@ -1,26 +1,15 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-class Referrals extends My_Controller {
+class Referrals extends Member_Controller {
 
     public function __construct() {
         parent::__construct();
     }
 
     public function index() {
-        $data['settings'] = $this->settings;
 
-        // Karbantartás ellenőrzés
-        if (check_maintenance()) {
-            redirect('page/maintenance');
-            exit();
-        }
-
-        // Felhasználó ellenőrzés
-        $userId = $this->session->userdata('user_id');
-        if (!$userId) {
-            redirect('home');
-        }
+		  $userId = $this->currentUser['id'];
 
         // Referáltak lekérdezése
         $this->db->select('id, address, referral_earnings, joined, last_activity');
@@ -38,6 +27,6 @@ class Referrals extends My_Controller {
         $data['pageTitle'] = 'Referrals';
 
         // Nézet renderelése
-        $this->render('referrals', $data);
+        $this->_load_view('referrals', $data);
     }
 }
